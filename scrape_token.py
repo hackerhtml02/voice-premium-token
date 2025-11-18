@@ -1,4 +1,5 @@
 import time
+import base64
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -42,9 +43,15 @@ try:
             token = auth_header.split(" ")[1]
             print("Token extracted:", token)
 
+            # ----------------------------
+            # Encode to Base64
+            encoded_token = base64.b64encode(token.encode()).decode()
+            print("Encoded Token:", encoded_token)
+            # ----------------------------
+
             # Save token to file
             with open("token.txt", "w") as f:
-                f.write(token)
+                f.write(encoded_token)
         else:
             print("Authorization missing!")
     else:
