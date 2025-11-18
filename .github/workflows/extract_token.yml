@@ -1,7 +1,7 @@
 name: Extract Token & Auto Restart
 
 on:
-  workflow_dispatch:   # manual trigger only
+  workflow_dispatch:    # Start manually only (no schedule)
 
 permissions:
   contents: write
@@ -11,22 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
+      - name: Install Selenium + Fix Dependencies
         run: |
-          pip install selenium selenium-wire webdriver-manager
+          pip install blinker==1.4
+          pip install mitmproxy==8.1.1
+          pip install selenium-wire
+          pip install selenium webdriver-manager
 
       - name: Run scraper
         run: python scrape_token.py
 
-      - name: Commit updated token
+      - name: Commit token if updated
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
@@ -35,12 +40,14 @@ jobs:
             git add token.txt
             git commit -m "Updated token at $(date)"
             git push
+          else
+            echo "No changes."
           fi
 
       - name: Wait 10 minutes
-        run: sleep 600   # 600 seconds = 10 min
+        run: sleep 600
 
-      - name: Restart workflow via API
+      - name: Restart workflow automatically
         env:
           REPO: ${{ github.repository }}
           TOKEN: ${{ secrets.ACTIONS_TRIGGER_TOKEN }}
